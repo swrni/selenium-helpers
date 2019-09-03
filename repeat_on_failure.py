@@ -8,6 +8,7 @@
 
 import sys
 import time
+from contextlib import contextmanager
 
 # Number of tries before raising exception.
 _TRIES = 4
@@ -57,3 +58,28 @@ class RepeatOnFailure:
         return try_to_execute
 
 RepeatOnError = RepeatOnFailure(exception_types=(Exception, ))
+
+@contextmanager
+def repeat_on_exceptions(function_with_params, tries=_TRIES, sleep_time=_SLEEP_TIME,
+                         exception_types=(), *args, **kwargs):
+    """
+    Try re-running 'function_with_params' in case it raises any of the exceptions in
+    'exception_types'.
+    """
+
+    for try_index in range(1, tries + 1):
+        try:
+            yield function_with_params(*args, **kwargs)
+        except Exception as raised_exception:
+            # Catch all exceptions but re-raise exceptions which types are not in
+            # 'exception_types'.
+            handle_exception = any((isinstance(raised_exception, exception_type)
+                                    for exception_type in exception_types))
+            # Re-raise unknown exceptions.
+            if not handle_exception:
+                raise
+            # Re-raise exception after 'tries'. 
+            if try_index == tries:
+                raise
+        time.sleep(sleep_time)
+    return None
