@@ -14,6 +14,9 @@ from selenium.common.exceptions import WebDriverException
 import _web_driver
 from repeat_on_failure import RepeatOnFailure
 
+# pylint: disable=invalid-name
+RepeatOnWebDriverException = RepeatOnFailure(exception_types=(WebDriverException, ))
+
 _DRIVER = None
 
 def get_driver():
@@ -56,7 +59,7 @@ def _find_by_xpath(xpath, root_element=None, many=False):
         return root_element.find_elements_by_xpath(xpath)
     return root_element.find_element_by_xpath(xpath)
 
-@RepeatOnFailure(exception_types=(WebDriverException, ))
+@RepeatOnWebDriverException
 def find_by_xpath(xpath, root_element=None, many=False):
     """Decorated '_find_by_xpath()' call."""
 
@@ -70,13 +73,13 @@ def _click_by_xpath(xpath, root_element=None):
     element.click()
     return element
 
-@RepeatOnFailure(exception_types=(WebDriverException, ))
+@RepeatOnWebDriverException
 def click_by_xpath(xpath, root_element=None):
     """Decorated '_click_by_xpath()' call."""
 
     return _click_by_xpath(xpath, root_element=root_element)
 
-@RepeatOnFailure(exception_types=(WebDriverException, ))
+@RepeatOnWebDriverException
 def read_text_by_xpath(xpath, root_element=None):
     """Find the first element matching 'xpath' and 'root_element' and return its text."""
 
@@ -94,7 +97,7 @@ def _read_attribute_by_xpath(xpath, attribute, root_element=None):
     element = _find_by_xpath(xpath, root_element=root_element, many=False)
     return element.get_attribute(attribute)
 
-@RepeatOnFailure(exception_types=(WebDriverException, ))
+@RepeatOnWebDriverException
 def read_attribute_by_xpath(xpath, attribute, root_element=None):
     """Decorated '_read_attribute_by_xpath()' call."""
 
@@ -106,7 +109,7 @@ def read_value_by_xpath(xpath, root_element=None):
     # TODO:: Remove this function as it is not really needed.
     return _read_attribute_by_xpath(xpath, "value", root_element=root_element)
 
-@RepeatOnFailure(exception_types=(WebDriverException, ))
+@RepeatOnWebDriverException
 def _send_keys_by_xpath(xpath, keys, root_element):
     """
     Find the first element matching 'xpath' and 'root_element' and try to change its value to
