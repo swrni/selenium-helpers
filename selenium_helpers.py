@@ -62,7 +62,7 @@ def find_by_xpath(xpath, root_element=None, many=False):
 
     return _find_by_xpath(xpath, root_element=root_element, many=many)
 
-def _click_by_xpath(xpath, root_element):
+def _click_by_xpath(xpath, root_element=None):
     """Find and click the first element matching 'xpath' and 'root_element'."""
 
     root_element = _validate_root_element(xpath, root_element)
@@ -71,10 +71,10 @@ def _click_by_xpath(xpath, root_element):
     return element
 
 @RepeatOnFailure(exception_types=(WebDriverException, ))
-def click_by_xpath(xpath, root_element):
+def click_by_xpath(xpath, root_element=None):
     """Decorated '_click_by_xpath()' call."""
 
-    return _click_by_xpath(xpath, root_element)
+    return _click_by_xpath(xpath, root_element=root_element)
 
 @RepeatOnFailure(exception_types=(WebDriverException, ))
 def read_text_by_xpath(xpath, root_element=None):
