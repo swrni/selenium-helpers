@@ -24,7 +24,7 @@ class RepeatOnFailure:
         """
         Initialize 'RepeatOnFailure'. If exception is raised, try executing the function again
         'tries' times while sleeping 'sleep_time' seconds in between function calls. Exceptions
-        which typees are in 'exception_types' are handled, while others are re-raised.
+        which types are in 'exception_types' are handled, while others are re-raised.
         """
 
         self.tries = tries
