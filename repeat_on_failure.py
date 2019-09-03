@@ -55,3 +55,5 @@ class RepeatOnFailure:
             return None
 
         return try_to_execute
+
+RepeatOnError = RepeatOnFailure(exception_types=(Exception, ))
