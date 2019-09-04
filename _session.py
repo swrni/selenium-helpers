@@ -40,3 +40,9 @@ def _save_session_id(session_id):
         raise SessionAlreadyExists(f"'_SESSION_ID_ENV_KEY' is already defined: "
                                    f"'{os.environ[_SESSION_ID_ENV_KEY]}'")
     os.environ[_SESSION_ID_ENV_KEY] = session_id
+
+def _clear_session_id():
+    """Remove session ID from the environment."""
+
+    if _SESSION_ID_ENV_KEY in os.environ:
+        del os.environ[_SESSION_ID_ENV_KEY]

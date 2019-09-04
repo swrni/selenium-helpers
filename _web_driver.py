@@ -8,6 +8,7 @@
 
 import os
 import logging
+import subprocess
 
 import _session
 import _service
@@ -75,3 +76,9 @@ def get_driver():
         _LOG.info("chromedriver is not running: %s", error)
     _service._start_chromedriver()
     return _WebDriver(port)
+
+def shutdown():
+    """Shutdown the 'chromedriver' service."""
+
+    _session._clear_session_id()
+    _service._shutdown_chromedriver()

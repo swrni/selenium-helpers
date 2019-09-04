@@ -65,12 +65,22 @@ def _read_log_level():
                _DEFAULT_LOG_LEVEL)
     return _DEFAULT_LOG_LEVEL
 
+def _shutdown_chromedriver():
+    """Shutdown the service."""
+
+    _LOG.info("Shutting down chromedriver")
+    subprocess.call("taskkill /f /im chromedriver.exe", stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
+
 def _start_chromedriver():
     """Start chromedriver executable."""
 
     _LOG.info("Starting a new chromedriver instance")
-    executable_path = os.environ[PATH_ENV_KEY]
 
+    # Verify that the service is actually down before starting a new one.
+    _shutdown_chromedriver()
+
+    executable_path = os.environ[PATH_ENV_KEY]
     cmd = [executable_path,
            f"--port={_read_port()}",
            f"--log-path={_read_log_path()}",

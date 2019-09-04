@@ -6,7 +6,9 @@
 
 """Script has helper functions for using Selenium."""
 
+import os
 import time
+import subprocess
 from contextlib import contextmanager
 
 from selenium.common.exceptions import WebDriverException
@@ -26,6 +28,15 @@ def get_driver():
     if not _DRIVER:
         _DRIVER = _web_driver.get_driver()
     return _DRIVER
+
+def shutdown():
+    """Shutdown session."""
+
+    global _DRIVER
+    if _DRIVER:
+        _DRIVER.quit()
+        _DRIVER = None
+    _web_driver.shutdown()
 
 class InvalidXPath(Exception):
     """Custom exception for invalid xpath."""
