@@ -11,13 +11,14 @@ import time
 import subprocess
 from contextlib import contextmanager
 
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, NoAlertPresentException
 
 import _web_driver
 from repeat_on_failure import RepeatOnFailure
 
 # pylint: disable=invalid-name
 RepeatOnWebDriverException = RepeatOnFailure(exception_types=(WebDriverException, ))
+RepeatOnNoAlertPresentException = RepeatOnFailure(exception_types=(NoAlertPresentException, ))
 
 _DRIVER = None
 
@@ -81,7 +82,7 @@ def _click_by_xpath(xpath, root_element=None):
 
     root_element = _validate_root_element(xpath, root_element)
     element = find_by_xpath(xpath, root_element=root_element, many=False)
-    element.click()
+    element.click() # TODO:: Change this to javascript '.click()'.
     return element
 
 @RepeatOnWebDriverException
@@ -89,6 +90,17 @@ def click_by_xpath(xpath, root_element=None):
     """Decorated '_click_by_xpath()' call."""
 
     return _click_by_xpath(xpath, root_element=root_element)
+
+def click_by_javascript(xpath, root_element=None):
+    """
+    Find the first element matching 'xpath' and 'root_element' and send '.click()' event to it
+    using javascript.
+    """
+
+    root_element = _validate_root_element(xpath, root_element)
+    element = find_by_xpath(xpath, root_element=root_element, many=False)
+    get_driver().execute_script("arguments[0].click();", element)
+    return element
 
 @RepeatOnWebDriverException
 def read_text_by_xpath(xpath, root_element=None):
@@ -200,3 +212,10 @@ def open_url(url, go_back=True, refresh=False, driver=None):
     # Go back to the new URL if needed.
     if go_back and _open_url(original_url, refresh, driver):
         time.sleep(_additional_page_opening_time)
+
+@RepeatOnNoAlertPresentException
+def accept_alert():
+    """Accept alert by clicking 'OK'."""
+
+    verification_alert = get_driver().switch_to.alert
+    verification_alert.accept()
