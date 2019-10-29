@@ -20,7 +20,7 @@ DEFAULT_PORT = "9515"
 # Define corresponding environment variable to set the log level for the service.
 LOG_LEVEL_ENV_KEY = "CHROMEDRIVER_LOG_LEVEL"
 ALLOWED_LOG_LEVELS = ("ALL", "DEBUG", "INFO", "WARNING", "SEVERE", "OFF")
-_DEFAULT_LOG_LEVEL = "INFO"
+_DEFAULT_LOG_LEVEL = "WARNING"
 
 # Define corresponding environment variable to set the log file for the service.
 LOG_PATH_ENV_KEY = "CHROMEDRIVER_LOG_PATH"
