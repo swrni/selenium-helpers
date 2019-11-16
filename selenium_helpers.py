@@ -6,19 +6,17 @@
 
 """Script has helper functions for using Selenium."""
 
-import os
 import time
-import subprocess
 from contextlib import contextmanager
 
 from selenium.common.exceptions import WebDriverException, NoAlertPresentException
 
 import _web_driver
-from repeat_on_failure import RepeatOnFailure
+from repeat_on_failure import ReTry
 
 # pylint: disable=invalid-name
-RepeatOnWebDriverException = RepeatOnFailure(exception_types=(WebDriverException, ))
-RepeatOnNoAlertPresentException = RepeatOnFailure(exception_types=(NoAlertPresentException, ))
+RepeatOnWebDriverException = ReTry(WebDriverException)
+RepeatOnNoAlertPresentException = ReTry(NoAlertPresentException)
 
 _DRIVER = None
 
@@ -125,12 +123,6 @@ def read_attribute_by_xpath(xpath, attribute, root_element=None):
     """Decorated '_read_attribute_by_xpath()' call."""
 
     return _read_attribute_by_xpath(xpath, attribute, root_element=root_element)
-
-def read_value_by_xpath(xpath, root_element=None):
-    """Shorthand for calling 'read_attribute_by_xpath(xpath, "value", ...)'."""
-
-    # TODO:: Remove this function as it is not really needed.
-    return _read_attribute_by_xpath(xpath, "value", root_element=root_element)
 
 @RepeatOnWebDriverException
 def _send_keys_by_xpath(xpath, keys, root_element):

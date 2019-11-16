@@ -9,12 +9,13 @@
 import os
 import logging
 import subprocess
+from urllib3.exceptions import MaxRetryError
 
 import _session
 import _service
 
 import selenium
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.options import Command, Options
 
 _MODULE_NAME, _ = os.path.splitext(os.path.basename(__file__))
 _LOG = logging.getLogger(name=_MODULE_NAME)
@@ -31,11 +32,6 @@ def _get_default_options():
 class ServiceError(Exception):
     """Custom exception for when 'chromedriver' service is not running or cannot be found."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize 'ServiceError'."""
-
-        super().__init__(*args, **kwargs)
-
 class _WebDriver(selenium.webdriver.remote.webdriver.WebDriver):
     """Remote driver class that uses an existing session when possible."""
 
@@ -49,7 +45,6 @@ class _WebDriver(selenium.webdriver.remote.webdriver.WebDriver):
         command_executor = f"http://127.0.0.1:{port}"
         _LOG.debug(f"Using 'command_executor': '{command_executor}'")
 
-        from urllib3.exceptions import MaxRetryError
         try:
             super().__init__(command_executor=command_executor, desired_capabilities={},
                              options=options)
@@ -58,7 +53,6 @@ class _WebDriver(selenium.webdriver.remote.webdriver.WebDriver):
             raise ServiceError("chromedriver service not running")
 
     def execute(self, driver_command, params=None):
-        from selenium.webdriver.remote.command import Command
         if driver_command == Command.NEW_SESSION:
             session_id = _session._read_session_id()
             if session_id:
