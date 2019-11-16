@@ -7,7 +7,7 @@
 """Script has class 'ReTry' for repeating function execution in case of an error."""
 
 import time
-from contextlib import contextmanager, suppress
+from contextlib import suppress
 
 # Number of tries before raising exception.
 _TRIES = 4

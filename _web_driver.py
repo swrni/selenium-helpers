@@ -8,14 +8,14 @@
 
 import os
 import logging
-import subprocess
 from urllib3.exceptions import MaxRetryError
+
+import selenium
+from selenium.webdriver.remote.command import Command
+from selenium.webdriver.chrome.options import Options
 
 import _session
 import _service
-
-import selenium
-from selenium.webdriver.chrome.options import Command, Options
 
 _MODULE_NAME, _ = os.path.splitext(os.path.basename(__file__))
 _LOG = logging.getLogger(name=_MODULE_NAME)

@@ -17,11 +17,6 @@ _LOG = logging.getLogger(name=_MODULE_NAME)
 class SessionAlreadyExists(Exception):
     """Custom exception for when the session ID is already in environment."""
 
-    def __init__(self, *args, **kwargs):
-        """Initialize 'SessionAlreadyExists'."""
-
-        super().__init__(*args, **kwargs)
-
 def _read_session_id():
     """
     Return the session ID that is currently used in chromedriver. Return 'None' if it is not
@@ -31,7 +26,9 @@ def _read_session_id():
     return os.environ.get(_SESSION_ID_ENV_KEY, None)
 
 def _save_session_id(session_id):
-    """Add the 'session_id' to environment. Raise 'SessionAlreadyExists' if it is already defined."""
+    """
+    Add the 'session_id' to environment. Raise 'SessionAlreadyExists' if it is already defined.
+    """
 
     if _SESSION_ID_ENV_KEY in os.environ:
         if os.environ[_SESSION_ID_ENV_KEY] == session_id:
