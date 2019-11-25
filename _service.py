@@ -7,8 +7,12 @@
 """Script handles initializing 'chromedriver' service."""
 
 import os
+import signal
 import logging
 import subprocess
+from contextlib import suppress
+
+from filelock import FileLock
 
 # Define corresponding environment variable to point to 'chromedriver' executable.
 PATH_ENV_KEY = "CHROMEDRIVER_PATH"
@@ -25,8 +29,15 @@ _DEFAULT_LOG_LEVEL = "WARNING"
 # Define corresponding environment variable to set the log file for the service.
 LOG_PATH_ENV_KEY = "CHROMEDRIVER_LOG_PATH"
 
-_MODULE_NAME, _ = os.path.splitext(os.path.basename(__file__))
+_FILE_DIR = os.path.dirname(__file__)
+_MODULE_NAME, _ = os.path.splitext(_FILE_DIR)
 _LOG = logging.getLogger(name=_MODULE_NAME)
+
+# Save 'chromedriver' 'pid' to this file.
+_PID_FILE_PATH = os.path.join(_FILE_DIR, "chromedriver-pid.txt")
+
+# Lock file for '_PID_FILE_PATH'.
+_PID_FILE_PATH_LOCK = _PID_FILE_PATH + ".lock"
 
 def _read_port():
     """
@@ -65,12 +76,30 @@ def _read_log_level():
                _DEFAULT_LOG_LEVEL)
     return _DEFAULT_LOG_LEVEL
 
+def _read_pid():
+    """
+    Read and return 'pid' of the currently running 'chromedriver' from the text file
+    '_PID_FILE_PATH'. If not found, return 'None'.
+    """
+
+    with open(_PID_FILE_PATH, "r") as pid_file:
+        pid = pid_file.readline().strip()
+    with suppress(ValueError):
+        return int(pid)
+    return None
+
 def _shutdown_chromedriver():
     """Shutdown the service."""
 
     _LOG.info("Shutting down chromedriver")
-    subprocess.call("taskkill /f /im chromedriver.exe", stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE)
+
+    with FileLock(_PID_FILE_PATH_LOCK, timeout=15):
+        if os.path.isfile(_PID_FILE_PATH):
+            pid = _read_pid()
+            if pid:
+                with suppress(OSError):
+                    os.kill(pid, signal.SIGTERM)
+            os.remove(_PID_FILE_PATH)
 
 def _start_chromedriver():
     """Start chromedriver executable."""
@@ -86,4 +115,9 @@ def _start_chromedriver():
            f"--log-path={_read_log_path()}",
            f"--log-level={_read_log_level()}",
            "--readable-timestamp"]
-    subprocess.Popen(cmd)
+
+    with FileLock(_PID_FILE_PATH_LOCK, timeout=15):
+        process = subprocess.Popen(cmd)
+        with open(_PID_FILE_PATH, "w") as pid_file:
+            pid_file.write(str(process.pid))
+    return process
