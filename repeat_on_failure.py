@@ -7,7 +7,6 @@
 """Script has class 'ReTry' for repeating function execution in case of an error."""
 
 import time
-from contextlib import suppress
 
 # Number of tries before raising exception.
 _TRIES = 4
@@ -37,10 +36,13 @@ class ReTry:
         def try_to_execute(*args, **kwargs):
             """Pass arguments to 'function_with_params'."""
 
-            for _ in range(self.tries):
-                with suppress(self.exception):
+            for try_count in range(self.tries + 1):
+                try:
                     return function_with_params(*args, **kwargs)
+                except self.exception:
+                    if try_count == self.tries:
+                        raise
                 time.sleep(self.sleep_time)
-            return None
+            # We will never land here.
 
         return try_to_execute
