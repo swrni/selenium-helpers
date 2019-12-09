@@ -211,3 +211,10 @@ def accept_alert():
 
     verification_alert = get_driver().switch_to.alert
     verification_alert.accept()
+
+@RepeatOnNoAlertPresentException
+def cancel_alert():
+    """Accept alert by clicking 'Cancel'."""
+
+    verification_alert = get_driver().switch_to.alert
+    verification_alert.dismiss()
