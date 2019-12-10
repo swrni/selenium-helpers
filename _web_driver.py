@@ -63,13 +63,16 @@ def get_driver():
     """Return instance of '_WebDriver' and start the 'chromedriver' service if needed."""
 
     # Use the default port if custom port is not found in environment.
-    port = os.environ.get(_service.PORT_ENV_KEY, _service.DEFAULT_PORT)
-    try:
-        return _WebDriver(port)
-    except ServiceError as error:
-        _LOG.info("chromedriver is not running: %s", error)
     _service._start_chromedriver()
-    return _WebDriver(port)
+    port = os.environ.get(_service.PORT_ENV_KEY, _service.DEFAULT_PORT)
+    driver = _WebDriver(port)
+    try:
+        _ = driver.current_url()
+    except selenium.common.exceptions.InvalidSessionIdException:
+        _LOG.error("Resetting web driver because of invalid session ID")
+        _session._clear_session_id()
+        driver = _WebDriver(port)
+    return driver
 
 def shutdown():
     """Shutdown the 'chromedriver' service."""

@@ -20,12 +20,17 @@ RepeatOnNoAlertPresentException = ReTry(NoAlertPresentException)
 
 _DRIVER = None
 
+def _init_driver():
+    """Initialize '_DRIVER'."""
+
+    global _DRIVER
+    _DRIVER = _web_driver.get_driver()
+
 def get_driver():
     """Cache and return the driver."""
 
-    global _DRIVER
     if not _DRIVER:
-        _DRIVER = _web_driver.get_driver()
+        _init_driver()
     return _DRIVER
 
 def shutdown():

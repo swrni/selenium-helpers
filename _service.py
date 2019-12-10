@@ -106,9 +106,6 @@ def _start_chromedriver():
 
     _LOG.info("Starting a new chromedriver instance")
 
-    # Verify that the service is actually down before starting a new one.
-    _shutdown_chromedriver()
-
     executable_path = os.environ[PATH_ENV_KEY]
     cmd = [executable_path,
            f"--port={_read_port()}",
@@ -118,6 +115,9 @@ def _start_chromedriver():
 
     with FileLock(_PID_FILE_PATH_LOCK, timeout=15):
         process = subprocess.Popen(cmd)
-        with open(_PID_FILE_PATH, "w") as pid_file:
-            pid_file.write(str(process.pid))
+        if process.poll():
+            _LOG.info("An instance of chromedriver is already running")
+        else:
+            with open(_PID_FILE_PATH, "w") as pid_file:
+                pid_file.write(str(process.pid))
     return process
