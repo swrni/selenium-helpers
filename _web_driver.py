@@ -67,8 +67,8 @@ def get_driver():
     port = os.environ.get(_service.PORT_ENV_KEY, _service.DEFAULT_PORT)
     driver = _WebDriver(port)
     try:
-        _ = driver.current_url()
-    except selenium.common.exceptions.InvalidSessionIdException:
+        _ = driver.current_url
+    except selenium.common.exceptions.WebDriverException:
         _LOG.error("Resetting web driver because of invalid session ID")
         _session._clear_session_id()
         driver = _WebDriver(port)
