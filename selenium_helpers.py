@@ -214,6 +214,7 @@ def open_url(url, go_back=True, refresh=False, driver=None):
 def accept_alert():
     """Accept alert by clicking 'OK'."""
 
+    time.sleep(1)
     verification_alert = get_driver().switch_to.alert
     verification_alert.accept()
 
@@ -221,5 +222,6 @@ def accept_alert():
 def cancel_alert():
     """Accept alert by clicking 'Cancel'."""
 
+    time.sleep(1)
     verification_alert = get_driver().switch_to.alert
     verification_alert.dismiss()
