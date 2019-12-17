@@ -161,6 +161,17 @@ def send_keys_by_xpath(xpath, keys, clear_first=True, root_element=None):
         keys = original_value + keys
     return _send_keys_by_xpath(xpath, keys, root_element)
 
+def set_value(xpath, value):
+    """Set value of the element matching 'xpath' to 'value'."""
+
+    for _ in range(3):
+        get_driver().execute_script(f"arguments[0].value='{value}';",
+                                    find_by_xpath(xpath))
+        if read_attribute_by_xpath(xpath, "value") == value:
+            return
+        time.sleep(1)
+    raise WebDriverException
+
 def get_current_url(driver=None):
     """Return current url as a string."""
 
