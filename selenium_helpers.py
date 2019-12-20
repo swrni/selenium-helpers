@@ -154,6 +154,9 @@ def send_keys_by_xpath(xpath, keys, clear_first=True, root_element=None):
     try again couple of times.
     """
 
+    if not isinstance(keys, str):
+        keys = f"{keys}"
+
     root_element = _validate_root_element(xpath, root_element)
     if not clear_first:
         # Append 'keys' to original value.
