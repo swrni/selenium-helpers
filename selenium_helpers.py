@@ -106,11 +106,17 @@ def click_by_javascript(xpath, root_element=None):
     return element
 
 @RepeatOnWebDriverException
-def read_text_by_xpath(xpath, root_element=None):
-    """Find the first element matching 'xpath' and 'root_element' and return its text."""
+def read_text_by_xpath(xpath, root_element=None, allow_empty=True):
+    """
+    Find the first element matching 'xpath' and 'root_element' and return its text. If
+    'allow_empty' is 'False' and the text is empty, raise 'WebDriverException'.
+    """
 
     root_element = _validate_root_element(xpath, root_element)
-    return _find_by_xpath(xpath, root_element, False).text
+    text = _find_by_xpath(xpath, root_element, False).text
+    if not text and allow_empty:
+        raise WebDriverException(f"Text empty: '{xpath}'")
+    return text
 
 def _read_attribute_by_xpath(xpath, attribute, root_element=None):
     """
