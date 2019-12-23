@@ -114,7 +114,7 @@ def read_text_by_xpath(xpath, root_element=None, allow_empty=True):
 
     root_element = _validate_root_element(xpath, root_element)
     text = _find_by_xpath(xpath, root_element, False).text
-    if not text and allow_empty:
+    if not text and not allow_empty:
         raise WebDriverException(f"Text empty: '{xpath}'")
     return text
 
