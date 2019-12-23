@@ -9,7 +9,9 @@
 import time
 from contextlib import contextmanager
 
-from selenium.common.exceptions import WebDriverException, NoAlertPresentException
+import selenium.common.exceptions as selenium_exceptions
+WebDriverException = selenium_exceptions.WebDriverException
+NoAlertPresentException = selenium_exceptions.NoAlertPresentException
 
 import _web_driver
 from repeat_on_failure import ReTry
