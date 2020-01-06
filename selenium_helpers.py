@@ -148,7 +148,7 @@ def _send_keys_by_xpath(xpath, keys, root_element):
     element.clear()
     element.send_keys(keys)
     # Wait a brief moment so that the text can be seen. Useful for debugging.
-    time.sleep(0.4)
+    time.sleep(1)
     element_value = element.get_attribute("value")
     if element_value != keys:
         raise WebDriverException(f"Element's value does not match with sent keys:\n"
@@ -214,7 +214,7 @@ def open_url(url, go_back=True, refresh=False, driver=None):
     > print("Now at starting url.")
     """
 
-    _additional_page_opening_time = 1
+    _additional_page_opening_time = 2
     if not driver:
         driver = get_driver()
 
@@ -236,7 +236,7 @@ def open_url(url, go_back=True, refresh=False, driver=None):
 def accept_alert():
     """Accept alert by clicking 'OK'."""
 
-    time.sleep(1)
+    time.sleep(2)
     verification_alert = get_driver().switch_to.alert
     verification_alert.accept()
 
@@ -244,6 +244,6 @@ def accept_alert():
 def cancel_alert():
     """Accept alert by clicking 'Cancel'."""
 
-    time.sleep(1)
+    time.sleep(2)
     verification_alert = get_driver().switch_to.alert
     verification_alert.dismiss()
