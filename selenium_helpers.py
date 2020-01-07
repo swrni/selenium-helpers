@@ -16,234 +16,224 @@ NoAlertPresentException = selenium_exceptions.NoAlertPresentException
 import _web_driver
 from repeat_on_failure import ReTry
 
-# pylint: disable=invalid-name
-RepeatOnWebDriverException = ReTry(WebDriverException)
-RepeatOnNoAlertPresentException = ReTry(NoAlertPresentException)
-
-_DRIVER = None
-
-def _init_driver():
-    """Initialize '_DRIVER'."""
-
-    global _DRIVER
-    _DRIVER = _web_driver.get_driver()
-
-def get_driver():
-    """Cache and return the driver."""
-
-    if not _DRIVER:
-        _init_driver()
-    return _DRIVER
-
-def shutdown():
-    """Shutdown session."""
-
-    global _DRIVER
-    if _DRIVER:
-        _DRIVER.quit()
-        _DRIVER = None
-    _web_driver.shutdown()
-
 class InvalidXPath(Exception):
     """Custom exception for invalid xpath."""
 
-def _validate_root_element(xpath, root_element):
-    """
-    Verify that 'xpath' and 'root_element' are valid and return validated 'root_element'. Otherwise
-    raise 'InvalidXPath' exception.
-    """
+class Options:
+    def __init__(self):
+        self.change_page_delay = 2
+        self.click_delay = 1
+        self.send_keys_delay = 1
 
-    if not root_element:
-        root_element = get_driver()
+        self.try_times = 10
+        self.sleep_time = 1
 
-    # pylint: disable=protected-access
-    if xpath.startswith("./") and isinstance(root_element, _web_driver._WebDriver):
-        raise InvalidXPath("'xpath' starting with: './', requires a 'root_element'")
-    if xpath.startswith("//") and not isinstance(root_element, _web_driver._WebDriver):
-        raise InvalidXPath("'xpath' starting with: '//', requires that no 'root_element' is "
-                           "passed")
-    return root_element
+    def get_default_re_try(self):
+        return ReTry(WebDriverException,
+            tries=self.try_times,
+            sleep_time=self.sleep_time
+        )
 
-def _find_by_xpath(xpath, root_element=None, many=False):
-    """
-    Wrapper for calling 'root_element.find_element_by_xpath(xpath)'. If 'root_element' is 'None',
-    cached driver is used instead. If 'many' is 'True', return a list of elements, instead of the
-    first found.
-    """
+    def get_alerts_re_try(self):
+        return ReTry(
+            NoAlertPresentException,
+            tries=self.try_times,
+            sleep_time=self.sleep_time
+        )
 
-    root_element = _validate_root_element(xpath, root_element)
-    if many:
-        return root_element.find_elements_by_xpath(xpath)
-    return root_element.find_element_by_xpath(xpath)
+class Driver:
+    def __init__(self, driver, options=None):
+        if not options:
+            options = Options()
+        if not isinstance(options, Options):
+            raise TypeError(f"Invalid type: {type(options)}")
 
-@RepeatOnWebDriverException
-def find_by_xpath(xpath, root_element=None, many=False):
-    """Decorated '_find_by_xpath()' call."""
+        self.driver = driver
+        self.options = options
 
-    return _find_by_xpath(xpath, root_element=root_element, many=many)
+    def _validate_root_element(self, xpath, root_element):
+        """
+        Verify that 'xpath' and 'root_element' are valid and return validated 'root_element'. Otherwise
+        raise 'InvalidXPath' exception.
+        """
 
-def _click_by_xpath(xpath, root_element=None):
-    """Find and click the first element matching 'xpath' and 'root_element'."""
+        if not root_element:
+            root_element = self.driver
 
-    root_element = _validate_root_element(xpath, root_element)
-    element = find_by_xpath(xpath, root_element=root_element, many=False)
-    element.click() # TODO:: Change this to javascript '.click()'.
-    return element
+        # pylint: disable=protected-access
+        if xpath.startswith("./") and isinstance(root_element, _web_driver._WebDriver):
+            raise InvalidXPath
+        if xpath.startswith("//") and not isinstance(root_element, _web_driver._WebDriver):
+            raise InvalidXPath
+        return root_element
 
-@RepeatOnWebDriverException
-def click_by_xpath(xpath, root_element=None):
-    """Decorated '_click_by_xpath()' call."""
+    def find_by_xpath(self, xpath, root_element=None, many=False):
+        """
+        Wrapper for calling 'root_element.find_element_by_xpath(xpath)'. If 'root_element' is 'None',
+        'self.driver' is used instead. If 'many' is 'True', return a list of elements, instead of the
+        first found.
+        """
 
-    return _click_by_xpath(xpath, root_element=root_element)
+        def implementation():
+            """Wrapped function implementation."""
 
-def click_by_javascript(xpath, root_element=None):
-    """
-    Find the first element matching 'xpath' and 'root_element' and send '.click()' event to it
-    using javascript.
-    """
+            if many:
+                return root_element.find_elements_by_xpath(xpath)
+            return root_element.find_element_by_xpath(xpath)
 
-    root_element = _validate_root_element(xpath, root_element)
-    element = find_by_xpath(xpath, root_element=root_element, many=False)
-    get_driver().execute_script("arguments[0].click();", element)
-    return element
+        root_element = self._validate_root_element(xpath, root_element)
+        return self.options.get_default_re_try()(implementation)()
 
-@RepeatOnWebDriverException
-def read_text_by_xpath(xpath, root_element=None, allow_empty=True):
-    """
-    Find the first element matching 'xpath' and 'root_element' and return its text. If
-    'allow_empty' is 'False' and the text is empty, raise 'WebDriverException'.
-    """
+    def click_by_xpath(self, xpath, send_js_event=False, root_element=None):
+        """Find and click the first element matching 'xpath' and 'root_element'."""
 
-    root_element = _validate_root_element(xpath, root_element)
-    text = _find_by_xpath(xpath, root_element, False).text
-    if not text and not allow_empty:
-        raise WebDriverException(f"Text empty: '{xpath}'")
-    return text
+        def implementation():
+            """Wrapped function implementation."""
 
-def _read_attribute_by_xpath(xpath, attribute, root_element=None):
-    """
-    Find the first element matching 'xpath' and 'root_element', call its method
-    'get_attribute(<attribute>)' and return it. 'xpath' and 'root_element' are passed to
-    'find_by_xpath()'.
-    """
+            element = self.find_by_xpath(xpath, root_element=root_element, many=False)
+            if send_js_event:
+                self.driver.execute_script("arguments[0].click();", element)
+            else:
+                element.click()
+            time.sleep(self.options.click_delay)
+            return element
 
-    root_element = _validate_root_element(xpath, root_element)
-    element = _find_by_xpath(xpath, root_element=root_element, many=False)
-    return element.get_attribute(attribute)
+        return self.options.get_default_re_try()(implementation)()
 
-@RepeatOnWebDriverException
-def read_attribute_by_xpath(xpath, attribute, root_element=None):
-    """Decorated '_read_attribute_by_xpath()' call."""
+    def read_text_by_xpath(self, xpath, root_element=None, allow_empty=True):
+        """
+        Find the first element matching 'xpath' and 'root_element' and return its text. If
+        'allow_empty' is 'False' and the text is empty, raise 'WebDriverException'.
+        """
 
-    return _read_attribute_by_xpath(xpath, attribute, root_element=root_element)
+        def implementation():
+            """Wrapped function implementation."""
 
-@RepeatOnWebDriverException
-def _send_keys_by_xpath(xpath, keys, root_element):
-    """
-    Find the first element matching 'xpath' and 'root_element' and try to change its value to
-    'keys'. In case of failure, try again couple of times.
-    """
+            text = self.find_by_xpath(xpath, root_element=root_element, many=False).text
+            if not text and not allow_empty:
+                raise WebDriverException(f"Text empty: '{xpath}'")
+            return text
 
-    element = _find_by_xpath(xpath, root_element=root_element, many=False)
-    element.clear()
-    element.send_keys(keys)
-    # Wait a brief moment so that the text can be seen. Useful for debugging.
-    time.sleep(1)
-    element_value = element.get_attribute("value")
-    if element_value != keys:
-        raise WebDriverException(f"Element's value does not match with sent keys:\n"
-                                 f"'{element_value}' and '{keys}'")
-    return element
+        return self.options.get_default_re_try()(implementation)()
 
-def send_keys_by_xpath(xpath, keys, clear_first=True, root_element=None):
-    """
-    Find the first element matching 'xpath' and 'root_element' and try to change its value to
-    either 'keys', or if 'clear_first' is 'True', append 'keys' to its value. In case of failure,
-    try again couple of times.
-    """
+    def read_attribute_by_xpath(self, xpath, attribute, root_element=None):
+        """
+        Find the first element matching 'xpath' and 'root_element', call its method
+        'get_attribute(<attribute>)' and return it. 'xpath' and 'root_element' are passed to
+        'find_by_xpath()'.
+        """
 
-    if not isinstance(keys, str):
-        keys = f"{keys}"
+        def implementation():
+            """Wrapped function implementation."""
 
-    root_element = _validate_root_element(xpath, root_element)
-    if not clear_first:
-        # Append 'keys' to original value.
-        original_value = read_attribute_by_xpath(xpath, "value", root_element=root_element)
-        keys = original_value + keys
-    return _send_keys_by_xpath(xpath, keys, root_element)
+            element = self.find_by_xpath(xpath, root_element=root_element, many=False)
+            return element.get_attribute(attribute)
 
-def set_value(xpath, value):
-    """Set value of the element matching 'xpath' to 'value'."""
+        return self.options.get_default_re_try()(implementation)()
 
-    for _ in range(3):
-        get_driver().execute_script(f"arguments[0].value='{value}';",
-                                    find_by_xpath(xpath))
-        if read_attribute_by_xpath(xpath, "value") == value:
-            return
-        time.sleep(1)
-    raise WebDriverException
+    def send_keys_by_xpath(self, xpath, keys, root_element=None):
+        """
+        Find the first element matching 'xpath' and 'root_element' and try to change its value to
+        'keys'.
+        """
 
-def get_current_url(driver=None):
-    """Return current url as a string."""
+        def implementation():
+            """Wrapped function implementation."""
 
-    if not driver:
-        driver = get_driver()
-    return driver.current_url
+            element = self.find_by_xpath(xpath, root_element=root_element)
 
-def _open_url(url, refresh, driver):
-    """
-    Open the 'url'. Arguments are similar to the arguments in 'open_url()'. Return 'True' if the
-    new page was opened, otherwise return 'False'.
-    """
+            element.clear()
+            time.sleep(self.options.send_keys_delay)
 
-    is_different_url = get_current_url(driver=driver) != url
-    if refresh or is_different_url:
-        driver.get(url)
-        return True
-    return False
+            element.send_keys(keys)
+            time.sleep(self.options.send_keys_delay)
 
-@contextmanager
-def open_url(url, go_back=True, refresh=False, driver=None):
-    """
-    Open the 'url'. If 'go_back' is 'True', go back to the original url afterwards. If 'refresh' is
-    'True', open the 'url' even if it is already open.
+            element_value = element.get_attribute("value")
+            if element_value != keys:
+                raise WebDriverException(f"Element's value does not match with sent keys:\n"
+                                         f"'{element_value}' and '{keys}'")
+            return element
 
-    Can be used like this:
-    > with open_url("google.com"):
-    >     print("Now at 'google.com'")
-    > print("Now at starting url.")
-    """
+        if not isinstance(keys, str):
+            keys = f"{keys}"
+        return self.options.get_default_re_try()(implementation)()
 
-    _additional_page_opening_time = 2
-    if not driver:
-        driver = get_driver()
+    def set_value(self, xpath, value):
+        """Set value of the element matching 'xpath' to 'value'."""
 
-    # Save original URL for later.
-    original_url = get_current_url(driver=driver)
+        def implementation():
+            """Wrapped function implementation."""
 
-    # Try to open the new URL.
-    if _open_url(url, refresh, driver):
-        time.sleep(_additional_page_opening_time)
+            element = self.find_by_xpath(xpath)
+            self.driver.execute_script(f"arguments[0].value='{value}';", element)
+            if self.read_attribute_by_xpath(xpath, "value") != value:
+                raise WebDriverException
 
-    # Not handling exceptions here to make debugging easier.
-    yield
+        self.options.get_default_re_try()(implementation)()
 
-    # Go back to the new URL if needed.
-    if go_back and _open_url(original_url, refresh, driver):
-        time.sleep(_additional_page_opening_time)
+    @property
+    def current_url(self):
+        """Return current url."""
 
-@RepeatOnNoAlertPresentException
-def accept_alert():
-    """Accept alert by clicking 'OK'."""
+        return self.driver.current_url
 
-    time.sleep(2)
-    verification_alert = get_driver().switch_to.alert
-    verification_alert.accept()
+    @contextmanager
+    def open_url(self, url, go_back=True, refresh=False):
+        """
+        Open the 'url'. If 'go_back' is 'True', go back to the original url afterwards. If 'refresh' is
+        'True', open the 'url' even if it is already open.
 
-@RepeatOnNoAlertPresentException
-def cancel_alert():
-    """Accept alert by clicking 'Cancel'."""
+        Can be used like this:
+        > with open_url("google.com"):
+        >     print("Now at 'google.com'")
+        > print("Now at starting url.")
+        """
 
-    time.sleep(2)
-    verification_alert = get_driver().switch_to.alert
-    verification_alert.dismiss()
+        def go_to(new_url):
+            """
+            Go to 'url' if it is a different page than the current one, or if 'refresh' is 'True'.
+            """
+
+            is_new_url = new_url != self.current_url
+            if refresh or is_new_url:
+                self.driver.get(new_url)
+                time.sleep(self.options.change_page_delay)
+
+        original_url = self.current_url
+        go_to(url)
+        yield
+        if go_back:
+            go_to(original_url)
+
+    def accept_alert(self):
+        """Close alert by clicking 'OK'."""
+
+        def implementation():
+            """Wrapped function implementation."""
+
+            self.driver.switch_to.alert.accept()
+        self.options.get_alerts_re_try()(implementation)()
+
+    def cancel_alert(self):
+        """Close alert by clicking 'Cancel'."""
+
+        def implementation():
+            """Wrapped function implementation."""
+
+            self.driver.switch_to.alert.dismiss()
+        self.options.get_alerts_re_try()(implementation)()
+
+    def close(self):
+        """Close the window."""
+
+        self.driver.close()
+
+    def shutdown(self):
+        """Close the window and shutdown the 'chromedriver'."""
+
+        self.driver.quit()
+        _web_driver.shutdown()
+
+def get_default_driver():
+    driver = _web_driver.get_driver()
+    return Driver(driver)
