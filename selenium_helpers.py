@@ -42,13 +42,13 @@ class Options:
         )
 
 class Driver:
-    def __init__(self, driver, options=None):
+    def __init__(self, driver=None, options=None):
         if not options:
             options = Options()
         if not isinstance(options, Options):
             raise TypeError(f"Invalid type: {type(options)}")
 
-        self.driver = driver
+        self._driver = driver
         self.options = options
 
     def _validate_root_element(self, xpath, root_element):
@@ -172,6 +172,14 @@ class Driver:
         self.options.get_default_re_try()(implementation)()
 
     @property
+    def driver(self):
+        """Return driver instance."""
+
+        if self._driver:
+            return self._driver
+        return _web_driver.get_driver()
+
+    @property
     def current_url(self):
         """Return current url."""
 
@@ -233,7 +241,3 @@ class Driver:
 
         self.driver.quit()
         _web_driver.shutdown()
-
-def get_default_driver():
-    driver = _web_driver.get_driver()
-    return Driver(driver)
