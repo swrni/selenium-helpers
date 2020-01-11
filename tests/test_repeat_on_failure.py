@@ -6,13 +6,13 @@
 
 """Tests for 'repeat_on_failure'."""
 
-from repeat_on_failure import RepeatOnFailure
+from repeat_on_failure import ReTry
 
 tests = []
 
 # Case 1.
 tries = 0
-@RepeatOnFailure(sleep_time=0, tries=5, exception_types=(Exception, ))
+@ReTry(Exception, sleep_time=0, tries=5)
 def case1(item):
     global tries
     if tries < 3:
@@ -29,7 +29,7 @@ tests.append(test_case1)
 
 # Case 2.
 tries = 0
-@RepeatOnFailure(sleep_time=0, tries=5)
+@ReTry(Exception, sleep_time=0, tries=5)
 def case2(item):
     global tries
     if tries < 3:
@@ -52,7 +52,7 @@ class CustomException3(Exception):
     pass
 
 tries = 0
-@RepeatOnFailure(sleep_time=0, tries=5, exception_types=(CustomException3, ))
+@ReTry(CustomException3, sleep_time=0, tries=5)
 def case3(item):
     global tries
     if tries < 3:
@@ -72,7 +72,7 @@ class CustomException4(Exception):
     pass
 
 tries = 0
-@RepeatOnFailure(sleep_time=0, tries=1, exception_types=(CustomException4, ))
+@ReTry(CustomException4, sleep_time=0, tries=1)
 def case4(item):
     global tries
     if tries < 4:
