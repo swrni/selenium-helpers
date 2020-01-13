@@ -175,9 +175,9 @@ class Driver:
     def driver(self):
         """Return driver instance."""
 
-        if self._driver:
-            return self._driver
-        return _web_driver.get_driver()
+        if self._driver is None:
+            self._driver = _web_driver.get_driver()
+        return self._driver
 
     @property
     def current_url(self):

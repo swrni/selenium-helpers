@@ -104,6 +104,8 @@ def _shutdown_chromedriver():
 def _start_chromedriver():
     """Start chromedriver executable."""
 
+    # TODO:: Check if process with the saved PID exists.
+
     _LOG.info("Starting a new chromedriver instance")
 
     executable_path = os.environ[PATH_ENV_KEY]
