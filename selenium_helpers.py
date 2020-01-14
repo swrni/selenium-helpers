@@ -234,10 +234,18 @@ class Driver:
     def close(self):
         """Close the window."""
 
-        self.driver.close()
+        if self._driver is not None:
+            self.driver.close()
 
     def shutdown(self):
         """Close the window and shutdown the 'chromedriver'."""
 
-        self.driver.quit()
+        if self._driver is not None:
+            self.driver.quit()
         _web_driver.shutdown()
+
+    def reset(self):
+        """Restart the browser."""
+
+        self.close()
+        self._driver = _web_driver.get_driver()
