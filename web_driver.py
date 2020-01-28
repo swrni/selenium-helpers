@@ -30,29 +30,22 @@ def _get_default_options():
     options.add_argument("disable-infobars")
     return options
 
-class ServiceError(Exception):
-    """Custom exception for when 'chromedriver' service is not running or cannot be found."""
-
 class _WebDriver(selenium.webdriver.remote.webdriver.WebDriver):
     """Remote driver class that uses an existing session when possible."""
 
-    def __init__(self, port, options=None, session_id=None):
+    def __init__(self, options, port, session_id=None):
         """Initialize '_WebDriver'."""
 
-        if not options:
-            options = _get_default_options()
-        assert isinstance(options, Options)
+        if not isinstance(options, Options):
+            raise TypeError(f"Invalid type: {type(options)}")
 
+        url = f"http://127.0.0.1:{port}"
         self._saved_session_id = session_id
 
-        command_executor = f"http://127.0.0.1:{port}"
-        _LOG.debug(f"Using 'command_executor': '{command_executor}'")
+        super().__init__(command_executor=url, desired_capabilities={}, options=options)
 
-        try:
-            super().__init__(command_executor=command_executor, desired_capabilities={},
-                             options=options)
-        except MaxRetryError:
-            raise ServiceError("chromedriver service not running")
+        # Verify that the browser opened.
+        self.current_url
 
     def execute(self, driver_command, params=None):
         """Override 'super().execute()' so existing session is used."""
@@ -67,20 +60,18 @@ def get_driver():
     # Use the default port if custom port is not found in environment.
     service._start_chromedriver()
 
+    options = _get_default_options()
     port = os.environ.get(service.PORT_ENV_KEY, service.DEFAULT_PORT)
     session_id = session._read_session_id()
 
     with suppress(selenium.common.exceptions.WebDriverException):
-        driver = _WebDriver(port, session_id=session_id)
-        _ = driver.current_url
+        driver = _WebDriver(options, port, session_id=session_id)
         session._save_session_id(driver.session_id)
-        _LOG.debug(f"Using session ID: {driver.session_id}")
         return driver
 
-    _LOG.warning("Resetting web driver because of invalid session ID")
     session._clear_session_id()
 
-    driver = _WebDriver(port)
+    driver = _WebDriver(options, port)
     session._save_session_id(driver.session_id)
     return driver
 
