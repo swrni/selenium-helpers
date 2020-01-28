@@ -42,11 +42,6 @@ def _save_session_id(session_id):
         _LOG.warning("'session_id' is of wrong type: %s", type(session_id))
         session_id = f"{session_id}"
 
-    # TODO:: Should these lines be removed?
-    old_session_id = _read_session_id()
-    if old_session_id and old_session_id != session_id:
-        raise SessionAlreadyExists()
-
     with FileLock(_SESSION_ID_FILE_PATH_LOCK, timeout=15):
         with open(_SESSION_ID_FILE_PATH, "w") as session_id_file:
             session_id_file.write(session_id)

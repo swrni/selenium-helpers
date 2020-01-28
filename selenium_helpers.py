@@ -13,7 +13,7 @@ import selenium.common.exceptions as selenium_exceptions
 WebDriverException = selenium_exceptions.WebDriverException
 NoAlertPresentException = selenium_exceptions.NoAlertPresentException
 
-import _web_driver
+import web_driver
 from repeat_on_failure import ReTry
 
 class InvalidXPath(Exception):
@@ -61,9 +61,9 @@ class Driver:
             root_element = self.driver
 
         # pylint: disable=protected-access
-        if xpath.startswith("./") and isinstance(root_element, _web_driver._WebDriver):
+        if xpath.startswith("./") and isinstance(root_element, web_driver._WebDriver):
             raise InvalidXPath
-        if xpath.startswith("//") and not isinstance(root_element, _web_driver._WebDriver):
+        if xpath.startswith("//") and not isinstance(root_element, web_driver._WebDriver):
             raise InvalidXPath
         return root_element
 
@@ -176,7 +176,7 @@ class Driver:
         """Return driver instance."""
 
         if self._driver is None:
-            self._driver = _web_driver.get_driver()
+            self._driver = web_driver.get_driver()
         return self._driver
 
     @property
@@ -242,10 +242,10 @@ class Driver:
 
         if self._driver is not None:
             self.driver.quit()
-        _web_driver.shutdown()
+        web_driver.shutdown()
 
     def reset(self):
         """Restart the browser."""
 
         self.close()
-        self._driver = _web_driver.get_driver()
+        self._driver = web_driver.get_driver()

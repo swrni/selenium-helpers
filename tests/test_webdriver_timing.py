@@ -10,19 +10,19 @@ import os
 import logging
 import subprocess
 
-import _service
-from _web_driver import get_driver
+import service
+from web_driver import get_driver
 
 import sys
 import time
 
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "ERROR"))
 
-os.environ[_service.PORT_ENV_KEY] = "9515"
-os.environ[_service.PATH_ENV_KEY] = "C:\\Users\\HenriImmonen\\chromedriver\\latest\\chromedriver.exe"
+os.environ[service.PORT_ENV_KEY] = "9515"
+os.environ[service.PATH_ENV_KEY] = "C:\\Users\\HenriImmonen\\chromedriver\\latest\\chromedriver.exe"
 
 def timing_kwargs(number=1):
-    return {"setup": "from _web_driver import get_driver",
+    return {"setup": "from web_driver import get_driver",
             "stmt": "_ = get_driver()",
             "number": 1}
 

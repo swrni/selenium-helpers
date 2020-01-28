@@ -5,8 +5,8 @@ import selenium_helpers
 import logging
 logging.basicConfig(level=os.environ.get("LOGLEVEL", "ERROR"))
 
-import _service
-os.environ[_service.PATH_ENV_KEY] = "C:\\Users\\HenriImmonen\\chromedriver\\latest\\chromedriver.exe"
+import service
+os.environ[service.PATH_ENV_KEY] = "C:\\Users\\HenriImmonen\\chromedriver\\latest\\chromedriver.exe"
 
 default_driver = selenium_helpers.get_default_driver()
 driver = default_driver.driver
