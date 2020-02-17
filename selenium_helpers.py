@@ -107,18 +107,20 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
             return {"success": 0, "value": None, "sessionId": self._saved_session_id}
         return super().execute(driver_command, params=params)
 
-    def find_by_xpath(self, xpath, many=False):
+    def find_by_xpath(self, xpath, root_element=None, many=False):
         """
         Wrapper for calling 'self.find_element_by_xpath(xpath)'. If 'many' is 'True', return a list
         of elements, instead of the first found.
         """
 
+        root_element = root_element if root_element else self
+
         def implementation():
             """Wrapped function implementation."""
 
             if many:
-                return self.find_elements_by_xpath(xpath)
-            return self.find_element_by_xpath(xpath)
+                return root_element.find_elements_by_xpath(xpath)
+            return root_element.find_element_by_xpath(xpath)
 
         return self.settings.get_default_re_try()(implementation)()
 
@@ -128,7 +130,7 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
         def implementation():
             """Wrapped function implementation."""
 
-            element = self.find_by_xpath(xpath, many=False)
+            element = self.find_by_xpath(xpath, root_element=root_element, many=False)
             if send_js_event:
                 self.execute_script("arguments[0].click();", element)
             else:
@@ -138,7 +140,7 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
 
         return self.settings.get_default_re_try()(implementation)()
 
-    def read_text_by_xpath(self, xpath, allow_empty=True):
+    def read_text_by_xpath(self, xpath, root_element=None, allow_empty=True):
         """
         Find the first element matching 'xpath' and 'root_element' and return its text. If
         'allow_empty' is 'False' and the text is empty, raise 'WebDriverException'.
@@ -147,14 +149,14 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
         def implementation():
             """Wrapped function implementation."""
 
-            text = self.find_by_xpath(xpath, many=False).text
+            text = self.find_by_xpath(xpath, root_element=root_element, many=False).text
             if not text and not allow_empty:
                 raise WebDriverException(f"Text empty: '{xpath}'")
             return text
 
         return self.settings.get_default_re_try()(implementation)()
 
-    def read_attribute_by_xpath(self, xpath, attribute):
+    def read_attribute_by_xpath(self, xpath, attribute, root_element=None):
         """
         Find the first element matching 'xpath' and 'root_element', call its method
         'get_attribute(<attribute>)' and return it. 'xpath' and 'root_element' are passed to
@@ -164,12 +166,12 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
         def implementation():
             """Wrapped function implementation."""
 
-            element = self.find_by_xpath(xpath, many=False)
+            element = self.find_by_xpath(xpath, root_element=root_element, many=False)
             return element.get_attribute(attribute)
 
         return self.settings.get_default_re_try()(implementation)()
 
-    def send_keys_by_xpath(self, xpath, keys):
+    def send_keys_by_xpath(self, xpath, keys, root_element=None):
         """
         Find the first element matching 'xpath' and 'root_element' and try to change its value to
         'keys'.
@@ -178,7 +180,7 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
         def implementation():
             """Wrapped function implementation."""
 
-            element = self.find_by_xpath(xpath)
+            element = self.find_by_xpath(xpath, root_element=root_element)
 
             element.clear()
             time.sleep(self.settings.send_keys_delay)
