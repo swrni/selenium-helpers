@@ -26,6 +26,8 @@ class InvalidXPath(Exception):
     """Custom exception for invalid xpath."""
 
 class Settings:
+    re_try = ReTry
+
     def __init__(self):
         self.change_page_delay = 2
         self.click_delay = 1
@@ -35,13 +37,13 @@ class Settings:
         self.sleep_time = 1
 
     def get_default_re_try(self):
-        return ReTry(WebDriverException,
+        return Settings.re_try(WebDriverException,
             tries=self.try_times,
             sleep_time=self.sleep_time
         )
 
     def get_alerts_re_try(self):
-        return ReTry(
+        return Settings.re_try(
             NoAlertPresentException,
             tries=self.try_times,
             sleep_time=self.sleep_time
