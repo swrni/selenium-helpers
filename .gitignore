@@ -3,3 +3,4 @@
 __pycache__
 chromedriver-pid.txt
 session-id.txt
+pip-wheel-metadata/
