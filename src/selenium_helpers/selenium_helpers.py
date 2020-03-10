@@ -65,11 +65,11 @@ class Driver(selenium.webdriver.remote.webdriver.WebDriver):
     """Remote driver class that uses an existing session when possible."""
 
     @staticmethod
-    def create():
+    def create(start_service=False):
         """Return instance of 'Driver' and start the 'chromedriver' service if needed."""
 
-        # Use the default port if custom port is not found in environment.
-        service._start_chromedriver()
+        if start_service:
+            service._start_chromedriver()
 
         options = _get_default_options()
         port = os.environ.get(service.PORT_ENV_KEY, service.DEFAULT_PORT)
