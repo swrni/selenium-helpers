@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script type="text/javascript">
+            function change_value() {
+                var input_element = document.getElementById("input-field");
+                var output_element = document.getElementById("output-field");
+                output_element.innerHTML = input_element.value;
+            }
+        </script>
+    </head>
+    <body>
+        <input type="text" id="input-field" />
+        <button onclick="change_value()">Change value</button>
+        <p id="output-field">Default value</p>
+    </body>
+</html>
